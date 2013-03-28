@@ -1,0 +1,3 @@
+== analytics-client
+
+A gem that provides...
