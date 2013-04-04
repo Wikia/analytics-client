@@ -8,22 +8,31 @@ require '../Flurry/config'
 
 class Flurry
 	FLURRY_DOMAIN = 'api.flurry.com'
-	FILE_NAME = 'data.csv'
 
-	def initialize key = '', appKey = ''
+	def initialize key = '', appKeys = '', filename = 'data'
 		@key = key
-		@appKey = appKey
+		puts appKeys
+		if appKeys != ''
+			@appKeys = {filename => appKeys}
+		else
+			@appKeys = {}
+		end
+
 		@data = {}
 	end
 
 	def getApps
 		apps = JSON.parse(Net::HTTP.get(FLURRY_DOMAIN, "/appInfo/getAllApplications?apiAccessCode=#{@key}"))['application']
+		keys = []
 
 		if apps.respond_to? 'collect'
-			apps.collect!{|app| app['@name'] + ' ' + app['@platform'] + ' ' + app['@apiKey']}
+			apps.map{|app|
+				keys << [(app['@name'] + ' ' + app['@platform']).gsub(' ', '_'), app['@apiKey']]
+			}
+
 		end
 
-		puts apps
+		keys
 	end
 
 	def dateString (startDate = 0, endDate)
@@ -43,8 +52,8 @@ class Flurry
 		"&startDate=#{startDate}&endDate=#{endDate}"
 	end
 
-	def accessString
-		"?apiAccessCode=#{@key}&apiKey=#{@appKey}"
+	def accessString appKey
+		"?apiAccessCode=#{@key}&apiKey=#{appKey}"
 	end
 
 	def getData data, endPoint
@@ -71,7 +80,7 @@ class Flurry
 		end
 	end
 
-	def get endPoint = '', startDate = 0, endDate
+	def get endPoint = '', key = '', startDate = 0, endDate
 
 		if endPoint.to_s == 'Summary'
 			param = '/eventMetrics/'
@@ -81,7 +90,7 @@ class Flurry
 			get = 'getData'
 		end
 
-		url = "#{param}#{endPoint}#{accessString}#{dateString startDate, endDate}"
+		url = "#{param}#{endPoint}#{accessString key}#{dateString startDate, endDate}"
 
 		data = JSON.parse Net::HTTP.get FLURRY_DOMAIN, url
 
@@ -90,24 +99,33 @@ class Flurry
 
 	def getAll date = -1, endDate = date
 
-		[:ActiveUsers, :PageViews, :NewUsers, :AvgSessionLength, :AvgPageViewsPerSession, :Summary].each do |endPoint|
-			puts 'Fetching data for - ' + endPoint.to_s
-			get endPoint, date, endDate
-			# Flurry api is throttled at 1 req/sec
+		if @appKeys.empty?
+			@appKeys = getApps
 			sleep 1
 		end
 
-		CSV.open 'data.csv', 'wb' do |csv|
-			csv << ['//' + (Date.today + date).to_s]
+		@appKeys.each{|app|
+			puts 'App - ' + app[0] + ' - ' + app[1]
 
-			csv << ['Name', 'Value'] + @keys
-
-			@data.each do |key, value|
-				csv << [key, value].flatten
+			[:ActiveUsers, :PageViews, :NewUsers, :AvgSessionLength, :AvgPageViewsPerSession, :Summary].each do |endPoint|
+				puts 'Fetching data for - ' + endPoint.to_s
+				get endPoint, app[1], date, endDate
+				# Flurry api is throttled at 1 req/sec
+				sleep 1
 			end
-		end
+
+			CSV.open app[0] + '.csv', 'wb' do |csv|
+				csv << ['//' + (Date.today + date).to_s]
+
+				csv << ['Name', 'Value'] + @keys
+
+				@data.each do |key, value|
+					csv << [key, value].flatten
+				end
+			end
+		}
 	end
 end
 
-Flurry.new(@apiKey, @androidGG).getAll
-#Flurry.new(@apiKey).getApps
+Flurry.new(@apiKey).getAll
+#Flurry.new(@apiKey).getAp
