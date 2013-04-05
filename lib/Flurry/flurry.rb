@@ -1,10 +1,7 @@
-#!/usr/bin/env ruby
-
 require 'CSV'
 require 'date'
 require 'net/http'
 require 'json'
-require '../Flurry/config'
 
 class Flurry
 	FLURRY_DOMAIN = 'api.flurry.com'
@@ -29,7 +26,6 @@ class Flurry
 			apps.map{|app|
 				keys << [(app['@name'] + ' ' + app['@platform']).gsub(' ', '_'), app['@apiKey']]
 			}
-
 		end
 
 		keys
@@ -97,6 +93,18 @@ class Flurry
 		self.send get, data, endPoint
 	end
 
+	def saveToCSV name = 'data', data = {}, keys = [], date
+		CSV.open name + '.csv', 'wb' do |csv|
+			csv << ['//' + (Date.today + date).to_s]
+
+			csv << ['Name', 'Value'] + keys
+
+			data.each do |key, value|
+				csv << [key, value].flatten
+			end
+		end
+	end
+
 	def getAll date = -1, endDate = date
 
 		if @appKeys.empty?
@@ -107,25 +115,14 @@ class Flurry
 		@appKeys.each{|app|
 			puts 'App - ' + app[0] + ' - ' + app[1]
 
-			[:ActiveUsers, :PageViews, :NewUsers, :AvgSessionLength, :AvgPageViewsPerSession, :Summary].each do |endPoint|
+			[:ActiveUsers, :PageViews, :NewUsers, :MedianSessionLength, :AvgSessionLength, :AvgPageViewsPerSession, :Sessions, :RetainedUsers, :Summary].each do |endPoint|
 				puts 'Fetching data for - ' + endPoint.to_s
 				get endPoint, app[1], date, endDate
 				# Flurry api is throttled at 1 req/sec
 				sleep 1
 			end
 
-			CSV.open app[0] + '.csv', 'wb' do |csv|
-				csv << ['//' + (Date.today + date).to_s]
-
-				csv << ['Name', 'Value'] + @keys
-
-				@data.each do |key, value|
-					csv << [key, value].flatten
-				end
-			end
+			saveToCSV app[0], @data, @keys, date
 		}
 	end
 end
-
-Flurry.new(@apiKey).getAll
-#Flurry.new(@apiKey).getAp
