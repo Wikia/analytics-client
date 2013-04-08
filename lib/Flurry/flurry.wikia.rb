@@ -4,4 +4,4 @@ require '../Flurry/flurry'
 require '../Flurry/config'
 
 @flurry = Flurry.new @apiKey
-@flurry.getAll
+@flurry.get_all
