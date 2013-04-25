@@ -7,4 +7,4 @@ gt_config = WIKIA_CONFIG[:gt_metrix]
 
 gt_metrix = GTMetrix.new(gt_config[:user], gt_config[:password])
 
-gt_metrix.fetch_data(gt_config[:tests])
+gt_metrix.fetch(gt_config[:tests])
