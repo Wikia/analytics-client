@@ -1,7 +1,8 @@
+require 'rubygems'
+require 'curb'
 require 'CSV'
 require 'date'
 require 'net/http'
-require 'Curb'
 require 'json'
 
 class GTMetrix
@@ -26,7 +27,7 @@ class GTMetrix
 		filename = "gtmetrix-#{today}.csv"
 
 		CSV.open(filename, 'wb') { |csv|
-			csv << ['//' + (Date.today).to_s]
+			csv << ['//' + today]
 
 			csv << [:page_url, @data.first[1].keys].flatten
 

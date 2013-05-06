@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby -w
 
-require '../GTMetrix/gtmetrix'
-require '../config'
+require_relative 'gtmetrix'
+require_relative '../config'
 
 gt_config = WIKIA_CONFIG[:gt_metrix]
 
