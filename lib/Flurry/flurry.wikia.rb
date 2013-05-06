@@ -1,8 +1,6 @@
 #!/usr/bin/env ruby -w
 
-require '../Flurry/flurry'
-require '../config'
+require_relative 'flurry'
+require_relative '../config'
 
-@flurry = Flurry.new(WIKIA_CONFIG[:flurry][:api_key])
-
-@flurry.get_all
+Flurry.new(WIKIA_CONFIG[:flurry][:api_key]).get_all
