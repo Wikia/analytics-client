@@ -1,4 +1,3 @@
-require_relative 'Helper'
 require_relative 'Task'
 
 class Job
@@ -11,12 +10,14 @@ class Job
 	end
 
 	def process
-		log "Processing #{@name}"
+		$log.info "Processing job: #{@name}"
 
 		if @config.respond_to? :each
 			@config.each { |name, config|
-				Task.new(name, config).process
+				Task.new( name, config ).process
 			}
 		end
+
+		$log.debug "Job: #{@name} done"
 	end
 end

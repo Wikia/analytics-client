@@ -1,3 +1,7 @@
+#output formatters
+require_relative 'Output/CsvOutput'
+
+#fetchers
 require_relative 'Flurry/flurry'
 #require_relative 'GTMetrix/gtmetrix'
 
@@ -11,22 +15,25 @@ class Task
 	def initialize(name, config)
 		@name = name
 		@config = config
+		@data = false
 	end
 
 	def process
 		type = @config['type']
-		log "\tCurrent Task: #{@name}"
-		log "\tData source: #{type}"
+		$log.info "\tCurrent Task: #{@name}"
+		$log.debug "\tData source: #{type}"
 
 		begin
-			fetcher = Object.const_get(type).new @config['config']
-			formatter = OutputFormatter.new @config['format']
+			@data = Object.const_get( type ).new( @config['config'] ).fetch
 		rescue
-			puts "\t\t'#{type}' fetcher does not exist"
+			$log.error "\t\t'#{type}' fetcher encountered a problem or does not exist"
+			return 0
 		end
 
-
-			#formatter.save fetcher.fetch, @config['output']
+		if @data
+			Object.const_get( @config['format'].capitalize + 'Output' ).new( @data, @config['output'] ).save
+		else
+			$log.error "\t\t No data fetched"
+		end
 	end
-
 end

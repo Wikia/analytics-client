@@ -6,29 +6,16 @@ require 'json'
 class Flurry
 	FLURRY_DOMAIN = 'api.flurry.com'
 
-	def initialize(key = '', app_keys = '', file_name = 'data')
-		@key = key
-		@app_keys = app_keys != '' ? {file_name => app_keys} : {}
+	def initialize( config = {} )
+		@key = config['key']
+		@app_keys = config['app_keys'] ? config['app_keys'] : {}
 		@data = {}
+		@keys = {}
 	end
 
 	private
 
-	def save_to_csv(name = 'data', data = {}, keys = [], date)
-		CSV.open(name + '.csv', 'wb') { |csv|
-			csv << ['//' + (Date.today + date).to_s]
-
-			csv << ['Name', 'Value'] + keys
-
-			data.each { |key, value|
-				csv << [key, value].flatten
-			}
-		}
-	end
-
-
-	def date_string(start_date = 0, end_date)
-
+	def date_string( start_date = 0, end_date )
 		start_date = end_date if start_date == 0
 		start_date = Date.today + start_date if !start_date.is_a? Date
 		end_date = Date.today + end_date if !end_date.is_a? Date
@@ -36,18 +23,30 @@ class Flurry
 		"&startDate=#{start_date}&endDate=#{end_date}"
 	end
 
-	def access_string(app_key)
+	def access_string( app_key )
 		"?apiAccessCode=#{@key}&apiKey=#{app_key}"
 	end
 
-	def get_data(data, end_point)
+	def format
+		ret = []
+
+		ret << ['name', 'value'] + @keys
+
+		@data.each { |key, values|
+			ret << [key, values].flatten
+		}
+
+		ret
+	end
+
+	def get_data( data, end_point )
 		day = data['day']
 		day = [day] unless day.is_a? Array
 
 		@data[end_point] = day.reduce(0){|sum, val| sum + val['@value'].to_i }
 	end
 
-	def get_summary(data, end_point)
+	def get_summary( data, end_point )
 
 		data = data['event']
 
@@ -55,7 +54,7 @@ class Flurry
 			data.each { |event|
 				name = event.delete '@eventName'
 
-				@keys = event.keys.map!{|key| key[1..-1]} if @keys == nil
+				@keys = event.keys.map!{|key| key[1..-1]} if @keys == {}
 
 				vals = event.values
 
@@ -79,7 +78,7 @@ class Flurry
 		keys
 	end
 
-	def get(end_point = '', key = '', start_date = 0, end_date)
+	def get( end_point = '', key = '', start_date = 0, end_date )
 
 		if end_point.to_s == 'Summary'
 			param = '/eventMetrics/'
@@ -93,10 +92,10 @@ class Flurry
 
 		data = JSON.parse(Net::HTTP.get(FLURRY_DOMAIN, url))
 
-		self.method('get_' + name).call(data, end_point)
+		self.method( 'get_' + name ).call( data, end_point )
 	end
 
-	def get_all(date = -1, end_date = date)
+	def fetch( date = -1, end_date = date )
 
 		if @app_keys.empty?
 			@app_keys = get_apps
@@ -104,16 +103,16 @@ class Flurry
 		end
 
 		@app_keys.each { |app|
-			puts 'App - ' + app[0] + ' - ' + app[1]
+			$log.info "\tApp - " + app[0] + ' - ' + app[1]
 
 			[:ActiveUsers, :PageViews, :NewUsers, :MedianSessionLength, :AvgSessionLength, :AvgPageViewsPerSession, :Sessions, :RetainedUsers, :Summary].each { |end_point|
-				puts 'Fetching data for - ' + end_point.to_s
+				$log.debug "\t\tFetching data for - " + end_point.to_s
 				get end_point, app[1], date, end_date
 				# Flurry api is throttled at 1 req/sec
 				sleep 1
 			}
-
-			save_to_csv(app[0], @data, @keys, date)
 		}
+
+		format
 	end
 end
