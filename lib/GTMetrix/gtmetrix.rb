@@ -1,5 +1,4 @@
-require 'rubygems'
-require 'curb'
+require 'Curb'
 require 'CSV'
 require 'date'
 require 'net/http'
@@ -13,43 +12,41 @@ class GTMetrix
 
 	COMPLETED = 'completed'
 
-	def initialize( user, password )
-		raise 'User not given' if user.empty?
-		raise 'Password not given' if password.empty?
+	def initialize( config = {} )
+		raise 'User not given' unless config['user']
+		raise 'Password not given' unless config['password']
+		raise 'No Urls given' unless config['urls']
 
-		@user = user
-		@password = password
+		@user = config['user']
+		@password = config['password']
+		@urls = config['urls']
+		@urls = [@urls] unless @urls.is_a? Array
 		@data = {}
 	end
 
-	def save
-		today = (Date.today).to_s
-		filename = "gtmetrix-#{today}.csv"
+	def format
+		ret = []
 
-		CSV.open(filename, 'wb') { |csv|
-			csv << ['//' + today]
+		ret << [:page_url, @data.first[1].keys].flatten
 
-			csv << [:page_url, @data.first[1].keys].flatten
-
-			@data.each { |key, values|
-				csv << [key, values.values].flatten
-			}
+		@data.each { |key, values|
+			ret << [key, values.values].flatten
 		}
 
-		puts "Data saved in #{filename} file"
+		ret
 	end
 
-	def poll_result(url, url_to_analyze)
+	def poll_result( url, url_to_analyze )
 
 		result = false
 		state = ''
 		count = 30
 
-		puts "Trying to fetch data for #{url}"
+		$log.debug "\t\t\t\tTrying to fetch data for #{url}"
 
 		while state != COMPLETED and count >= 0 do
 
-			c = Curl::Easy.new(url)
+			c = Curl::Easy.new( url )
 			c.http_auth_types = :basic
 			c.username = @user
 			c.password = @password
@@ -63,46 +60,52 @@ class GTMetrix
 		end
 
 		if state == COMPLETED
-			puts "Data fetched in #{31 - count} tries"
+			$log.debug "\t\t\t\tData fetched in #{30 - count} tries"
 			@data[url_to_analyze] = result['results'].merge result['resources']
 		else
-			puts 'Something went wrong and after 30 tries there still is no data'
+			$log.error 'Something went wrong and after 30 tries there still is no data'
 		end
 	end
 
-	def fetch_test_url( url = ANALYSIS_URL, url_to_analyze )
-		raise 'Url not given' if url_to_analyze.empty?
+	def fetch_test_url( url_to_analyze )
+		$log.info "\t\t\tRequesting test for #{url_to_analyze}"
 
-		puts "Requesting test for #{url_to_analyze}"
-
-		c = Curl::Easy.new(url)
+		c = Curl::Easy.new( ANALYSIS_URL )
 		c.http_auth_types = :basic
 		c.username = @user
 		c.password = @password
-		c.http_post(Curl::PostField.content('url', url_to_analyze))
+		c.http_post( Curl::PostField.content( 'url', url_to_analyze ) )
 		c.perform
 
 		result_url = JSON.parse c.body_str
 
+		if result_url['error']
+			raise result_url['error']
+		end
+
+		$log.debug "\t\t\tTest url: #{result_url['poll_state_url']}"
 		result_url['poll_state_url']
 	end
 
 	public
 
-	def fetch urls
+	def fetch
 		now = Time.now
-		puts "Start process at #{now}"
+		$log.debug "\t\tStart process at #{now}"
 
-		urls = [urls] unless urls.is_a? Array
+		@urls.each { |url|
+			begin
+				test_url = fetch_test_url( url )
+			rescue => detail
+				$log.error "\t\t\t#{detail.message}"
+				next
+			end
 
-		if urls.respond_to? :each
-			urls.each { |url|
-				poll_result(fetch_test_url(url), url)
-			}
-		end
+			poll_result( test_url, url )
+		}
 
-		save
+		$log.debug "\t\tProcess finished in #{(Time.now - now).round(2)}"
 
-		puts "Process finised in #{(Time.now - now).round(2)}"
+		format
 	end
 end

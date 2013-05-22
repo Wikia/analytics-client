@@ -2,8 +2,8 @@
 require_relative 'Output/CsvOutput'
 
 #fetchers
-require_relative 'Flurry/flurry'
-#require_relative 'GTMetrix/gtmetrix'
+require_relative 'Flurry/Flurry'
+require_relative 'GTMetrix/GTMetrix'
 
 class Task
 	@@known_modules = %w(
@@ -16,6 +16,9 @@ class Task
 		@name = name
 		@config = config
 		@data = false
+
+		@format = @config['format'] ? @config['format'].capitalize : 'Csv'
+		@output = @config['output'] ? @config['output'] : @name
 	end
 
 	def process
@@ -25,13 +28,15 @@ class Task
 
 		begin
 			@data = Object.const_get( type ).new( @config['config'] ).fetch
-		rescue
+		rescue => detail
 			$log.error "\t\t'#{type}' fetcher encountered a problem or does not exist"
+			$log.error "\t\t\t#{detail}"
+			$log.debug detail.backtrace.join("\r\n")
 			return 0
 		end
 
 		if @data
-			Object.const_get( @config['format'].capitalize + 'Output' ).new( @data, @config['output'] ).save
+			Object.const_get( @format + 'Output' ).new( @data, @output ).save
 		else
 			$log.error "\t\t No data fetched"
 		end

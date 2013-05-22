@@ -15,7 +15,7 @@ class CsvOutput
 				}
 			}
 		else
-			log 'Corrupt data'
+			$log.error "\t\t\tCorrupt data"
 		end
 	end
 end
