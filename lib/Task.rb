@@ -1,10 +1,3 @@
-#output formatters
-require_relative 'Output/CsvOutput'
-
-#fetchers
-require_relative 'Flurry/Flurry'
-require_relative 'GTMetrix/GTMetrix'
-
 class Task
 	@@known_modules = %w(
 		Flurry
@@ -18,6 +11,8 @@ class Task
 		@data = false
 
 		@format = @config['format'] ? @config['format'].capitalize : 'Csv'
+		@output_class = @format + 'Output'
+
 		@output = @config['output'] ? @config['output'] : @name
 	end
 
@@ -25,6 +20,23 @@ class Task
 		type = @config['type']
 		$log.info "\tCurrent Task: #{@name}"
 		$log.debug "\tData source: #{type}"
+
+		#Dynamically load needed files for fetchers
+		begin
+			require_relative "#{type}/#{type}"
+		rescue LoadError => details
+			$log.error "\tFetcher file not found - #{details.message}"
+			return 0
+		end
+
+		#Dynamically load needed files for Output classes
+		begin
+			require_relative "Output/#{@output_class}"
+		rescue LoadError => details
+			$log.error "\tOutput class not found - #{details.message}"
+			return 0
+		end
+
 
 		begin
 			@data = Object.const_get( type ).new( @config['config'] ).fetch
@@ -36,7 +48,7 @@ class Task
 		end
 
 		if @data
-			Object.const_get( @format + 'Output' ).new( @data, @output ).save
+			Object.const_get( @output_class ).new( @data, @output ).save
 		else
 			$log.error "\t\t No data fetched"
 		end
