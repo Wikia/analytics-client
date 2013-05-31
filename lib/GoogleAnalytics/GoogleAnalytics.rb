@@ -49,7 +49,7 @@ class GoogleAnalytics
 
 	public
 
-	def fetch
+	def fetch save_method
 		results = []
 		keys = []
 
@@ -82,6 +82,6 @@ class GoogleAnalytics
 				results << res
 			}
 
-		results.unshift keys
+		save_method[ results.unshift keys ]
 	end
 end

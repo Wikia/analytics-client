@@ -48,7 +48,7 @@ Flurry: #Job name
     output: mobile_apps.csv # file you want results to be saved in
 GTMetrix_job:
   page_metrix:
-    type: GTMetrixs
+    type: GTMetrix
     config:
       user: USER
       password: PASSWORD

@@ -1,8 +1,6 @@
 require 'Curb'
 require 'json'
-require 'CSV'
 require 'date'
-require 'net/http'
 
 class GTMetrix
 	GT_METRICS_URL = 'https://gtmetrix.com/api/0.1/'
@@ -89,7 +87,7 @@ class GTMetrix
 
 	public
 
-	def fetch
+	def fetch save_method
 		now = Time.now
 		$log.debug "\t\tStart process at #{now}"
 
@@ -106,6 +104,6 @@ class GTMetrix
 
 		$log.debug "\t\tProcess finished in #{(Time.now - now).round(2)}"
 
-		format
+		save_method[ format ]
 	end
 end

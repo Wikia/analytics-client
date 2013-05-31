@@ -37,9 +37,16 @@ class Task
 			return 0
 		end
 
-
 		begin
-			@data = Object.const_get( type ).new( @config['config'] ).fetch
+			output = Object.const_get( @output_class ).new( @output )
+
+			Object.const_get( type ).new( @config['config'] ).fetch( lambda {|data, prefix = ''|
+				if data
+					output.save data, prefix
+				else
+					$log.error "\t\t No data fetched"
+				end
+			})
 		rescue => detail
 			$log.error "\t\t'#{type}' fetcher encountered a problem or does not exist"
 			$log.error "\t\t\t#{detail}"
@@ -47,10 +54,6 @@ class Task
 			return 0
 		end
 
-		if @data
-			Object.const_get( @output_class ).new( @data, @output ).save
-		else
-			$log.error "\t\t No data fetched"
-		end
+
 	end
 end

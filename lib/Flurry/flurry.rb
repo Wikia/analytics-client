@@ -1,4 +1,3 @@
-require 'CSV'
 require 'date'
 require 'net/http'
 require 'json'
@@ -27,26 +26,26 @@ class Flurry
 		"?apiAccessCode=#{@key}&apiKey=#{app_key}"
 	end
 
-	def format
+	def format app_data
 		ret = []
 
 		ret << ['name', 'value'] + @keys
 
-		@data.each { |key, values|
+		app_data.each { |key, values|
 			ret << [key, values].flatten
 		}
 
 		ret
 	end
 
-	def get_data( data, end_point )
+	def get_data( data, end_point, app_data )
 		day = data['day']
 		day = [day] unless day.is_a? Array
 
-		@data[end_point] = day.reduce(0){|sum, val| sum + val['@value'].to_i }
+		app_data[end_point] = day.reduce(0){|sum, val| sum + val['@value'].to_i }
 	end
 
-	def get_summary( data, end_point )
+	def get_summary( data, end_point, app_data )
 
 		data = data['event']
 
@@ -58,7 +57,7 @@ class Flurry
 
 				vals = event.values
 
-				@data[name] = [nil] + vals.map{|x| x.to_i}
+				app_data[name] = [nil] + vals.map{|x| x.to_i}
 			}
 		end
 	end
@@ -78,7 +77,7 @@ class Flurry
 		keys
 	end
 
-	def get( end_point = '', key = '', start_date = 0, end_date )
+	def get( end_point = '', key = '', start_date = 0, end_date, app_data )
 
 		if end_point.to_s == 'Summary'
 			param = '/eventMetrics/'
@@ -92,10 +91,10 @@ class Flurry
 
 		data = JSON.parse(Net::HTTP.get(FLURRY_DOMAIN, url))
 
-		self.method( 'get_' + name ).call( data, end_point )
+		self.method( 'get_' + name ).call( data, end_point, app_data )
 	end
 
-	def fetch( date = -1, end_date = date )
+	def fetch( save_method, date = -1, end_date = date )
 
 		if @app_keys.empty?
 			@app_keys = get_apps
@@ -104,15 +103,16 @@ class Flurry
 
 		@app_keys.each { |app|
 			$log.info "\tApp - " + app[0] + ' - ' + app[1]
+			app_data = {}
 
 			[:ActiveUsers, :PageViews, :NewUsers, :MedianSessionLength, :AvgSessionLength, :AvgPageViewsPerSession, :Sessions, :RetainedUsers, :Summary].each { |end_point|
 				$log.debug "\t\tFetching data for - " + end_point.to_s
-				get end_point, app[1], date, end_date
+				get end_point, app[1], date, end_date, app_data
 				# Flurry api is throttled at 1 req/sec
 				sleep 1
 			}
-		}
 
-		format
+			save_method[ format( app_data ), app[0] ]
+		}
 	end
 end
