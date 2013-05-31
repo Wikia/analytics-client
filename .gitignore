@@ -18,4 +18,4 @@ _yardoc
 doc/
 
 .idea
-lib/example-config.yml
+lib/Config

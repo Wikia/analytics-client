@@ -3,9 +3,9 @@
 require 'optparse'
 require 'yaml'
 
-require_relative 'ColorLogger'
-require_relative 'Job'
-require_relative 'Task'
+require_relative 'Framework/ColorLogger'
+require_relative 'Framework/Job'
+require_relative 'Framework/Task'
 
 $options = {}
 

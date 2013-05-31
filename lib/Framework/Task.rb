@@ -23,7 +23,7 @@ class Task
 
 		#Dynamically load needed files for fetchers
 		begin
-			require_relative "#{type}/#{type}"
+			require_relative "../#{type}/#{type}"
 		rescue LoadError => details
 			$log.fatal "\tFetcher file not found - #{details.message}"
 			return 0
@@ -31,7 +31,7 @@ class Task
 
 		#Dynamically load needed files for Output classes
 		begin
-			require_relative "Output/#{@output_class}"
+			require_relative "../Output/#{@output_class}"
 		rescue LoadError => details
 			$log.fatal "\tOutput class not found - #{details.message}"
 			return 0
