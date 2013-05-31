@@ -52,19 +52,19 @@ GTMetrix_job:
     config:
       user: USER
       password: PASSWORD
-      urls:
+      urls: # Urls to run page analytics for (GTMetrix supports upto 20 request per day)
         - http://example.com
         - http://example.com/page/admin.php
     output: ga_mobile_pvGTM
 GA_Mobile:
   page_views:
-    type: GoogleAnalytics
+    type: GoogleAnalytics # It uses Legato See https://github.com/tpitale/legato
     config:
       client_id: CLIENT_ID
       client_secret: CLIENT_SECRET
-      token: TOKEN
+      token: TOKEN #See http://jonathanotto.com/blog/google_oauth2_api_quick_tutorial.html
       refresh_token: REFRESH_TOKEN
-      conf: Path/to/Legato/models.rb
+      conf: Path/to/Legato/models.rb # See https://github.com/tpitale/legato/wiki/Model-Data
       model: ModelName
       filters:
         - it_can_be_omitted_and_will_run_all_filters_in_model
