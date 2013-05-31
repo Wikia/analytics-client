@@ -18,6 +18,14 @@ class GoogleAnalytics
 			raise 'token or refresh_token not given'
 		end
 
+		raise "Config file not passed" unless config['conf']
+		require_relative '../' + config['conf']
+
+		raise "Model class not passed" unless config['model']
+		@model = config['model']
+
+		@filters ||= config['filters']
+
 		client = OAuth2::Client.new(
 			config['client_id'],
 			config['client_secret'],
@@ -36,9 +44,7 @@ class GoogleAnalytics
 			}
 		).refresh!
 
-		user = Legato::User.new( access_token )
-
-		@profile = user.profiles.first
+		@profile = Legato::User.new( access_token ).profiles.first
 	end
 
 	public
@@ -47,23 +53,35 @@ class GoogleAnalytics
 		results = []
 		keys = []
 
-		Dupa.filters.each_key{|as|
-			p as
+		model_obj = Object.const_get( @model )
+		filters = model_obj.filters
+
+		model = @profile.send(model_obj.to_s.underscore)
+
+		#leave only jobs that were specified in cli
+		if @filters.respond_to? :each
+			filters.keep_if { |key|
+				@filters.member? key.to_s
+			}
+		end
+
+		filters.each_key{ |filter|
+			model.send(filter)
 		}
 
-		#@profile.dupa.filters.each {|result|
-		#	result_hash = result.marshal_dump
-		#	res = []
-		#
-		#	keys = result_hash.keys if keys.empty?
-		#
-		#	result_hash.each_value{|value|
-		#		res << value
-		#	}
-		#
-		#	results << res
-		#}
-		#
-		#results.unshift keys
+		model.each {|result|
+				result_hash = result.marshal_dump
+				res = []
+
+				keys = result_hash.keys if keys.empty?
+
+				result_hash.each_value{|value|
+					res << value
+				}
+
+				results << res
+			}
+
+		results.unshift keys
 	end
 end
