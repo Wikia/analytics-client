@@ -1,7 +1,3 @@
-require 'Curb'
-require 'json'
-require 'date'
-
 class GTMetrix
 	GT_METRICS_URL = 'https://gtmetrix.com/api/0.1/'
 

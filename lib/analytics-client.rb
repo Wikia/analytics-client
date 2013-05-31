@@ -2,6 +2,9 @@
 
 require 'optparse'
 require 'yaml'
+require 'Curb'
+require 'date'
+require 'json'
 
 require_relative 'Framework/ColorLogger'
 require_relative 'Framework/Job'

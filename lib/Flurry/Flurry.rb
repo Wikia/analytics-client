@@ -1,7 +1,3 @@
-require 'date'
-require 'net/http'
-require 'json'
-
 class Flurry
 	FLURRY_DOMAIN = 'api.flurry.com'
 
@@ -14,7 +10,7 @@ class Flurry
 
 	private
 
-	def date_string( start_date = 0, end_date )
+	def date_string( start_date = 0, end_date = 0 )
 		start_date = end_date if start_date == 0
 		start_date = Date.today + start_date if !start_date.is_a? Date
 		end_date = Date.today + end_date if !end_date.is_a? Date
@@ -65,7 +61,7 @@ class Flurry
 	public
 
 	def get_apps
-		apps = JSON.parse(Net::HTTP.get(FLURRY_DOMAIN, "/appInfo/getAllApplications?apiAccessCode=#{@key}"))['application']
+		apps = JSON.parse( Curl.get( FLURRY_DOMAIN + "/appInfo/getAllApplications?apiAccessCode=#{@key}" ).body_str )['application']
 		keys = []
 
 		if apps.respond_to? :collect
@@ -77,7 +73,7 @@ class Flurry
 		keys
 	end
 
-	def get( end_point = '', key = '', start_date = 0, end_date, app_data )
+	def get( end_point = '', key = '', start_date = 0, end_date = 0, app_data = {} )
 
 		if end_point.to_s == 'Summary'
 			param = '/eventMetrics/'
@@ -89,7 +85,7 @@ class Flurry
 
 		url = "#{param}#{end_point}#{access_string key}#{date_string start_date, end_date}"
 
-		data = JSON.parse(Net::HTTP.get(FLURRY_DOMAIN, url))
+		data = JSON.parse( Curl.get( FLURRY_DOMAIN + url ).body_str )
 
 		self.method( 'get_' + name ).call( data, end_point, app_data )
 	end
