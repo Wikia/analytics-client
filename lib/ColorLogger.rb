@@ -1,3 +1,5 @@
+require 'Logger'
+
 class Logger
 	module Colors
 		VERSION = '1.0.0'
@@ -25,9 +27,7 @@ class Logger
 			STDERR => %w[nothing green yellow light_red light_purple light_cyan],
 		}
 	end
-end
 
-class Logger
 	alias format_message_colorless format_message
 
 	def format_message(level, *args)

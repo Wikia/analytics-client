@@ -1,5 +1,3 @@
-require_relative 'Task'
-
 class Job
 	def initialize name, config
 		raise 'Job name not passed' unless name.is_a? String

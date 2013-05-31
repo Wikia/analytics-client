@@ -1,8 +1,8 @@
 require 'Curb'
+require 'json'
 require 'CSV'
 require 'date'
 require 'net/http'
-require 'json'
 
 class GTMetrix
 	GT_METRICS_URL = 'https://gtmetrix.com/api/0.1/'

@@ -1,11 +1,11 @@
-#!/usr/bin/env ruby -w
+#!/usr/bin/env ruby
 
 require 'optparse'
 require 'yaml'
-require 'Logger'
 
-require_relative 'Logger'
+require_relative 'ColorLogger'
 require_relative 'Job'
+require_relative 'Task'
 
 $options = {}
 

@@ -25,7 +25,7 @@ class Task
 		begin
 			require_relative "#{type}/#{type}"
 		rescue LoadError => details
-			$log.error "\tFetcher file not found - #{details.message}"
+			$log.fatal "\tFetcher file not found - #{details.message}"
 			return 0
 		end
 
@@ -33,7 +33,7 @@ class Task
 		begin
 			require_relative "Output/#{@output_class}"
 		rescue LoadError => details
-			$log.error "\tOutput class not found - #{details.message}"
+			$log.fatal "\tOutput class not found - #{details.message}"
 			return 0
 		end
 

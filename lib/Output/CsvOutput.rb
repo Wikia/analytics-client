@@ -1,3 +1,5 @@
+require 'csv'
+
 class CsvOutput
 	def initialize( data, filename )
 		@data = data
