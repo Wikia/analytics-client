@@ -7,10 +7,10 @@ require 'spec/rake/spectask'
 spec = Gem::Specification.new do |s|
   s.name = "analytics-client"
   s.version = "0.0.1"
-  s.author = "Your Name"
-  s.email = "Your Email"
-  s.homepage = "http://example.com"
-  s.description = s.summary = "A gem that provides..."
+  s.author = "Jakub Olek"
+  s.email = "jakubolek@wikia-inc.com"
+  s.homepage = "http://wikia.com"
+  s.description = s.summary = "A gem that provides easy way to fetch data from various analytics platforms"
   
   s.platform = Gem::Platform::RUBY
   s.has_rdoc = true
