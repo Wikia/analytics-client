@@ -1,4 +1,6 @@
 TODO:
-Fix LICENSE with your name
 Fix Rakefile with your name and contact info
-Add your code to lib/<%= name %>.rb
+Create Gem package
+Logic for config could be more flexible and defensive
+Generating Tokens for GA is a pain
+Unit Tests
