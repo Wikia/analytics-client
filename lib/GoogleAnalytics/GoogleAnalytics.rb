@@ -1,9 +1,5 @@
-require 'legato'
-require 'oauth2'
-
-#to get GA token follow these instructions: http://jonathanotto.com/blog/google_oauth2_api_quick_tutorial.html
-
 class GoogleAnalytics
+	#to get GA token follow these instructions: http://jonathanotto.com/blog/google_oauth2_api_quick_tutorial.html
 
 	def initialize( config = {} )
 		if !config['client_id'] || !config['client_secret']
@@ -40,7 +36,7 @@ class GoogleAnalytics
 			client,
 			config['token'],
 			{
-				refresh_token: config['refresh_token'],
+				:refresh_token => config['refresh_token']
 			}
 		).refresh!
 

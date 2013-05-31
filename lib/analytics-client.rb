@@ -5,6 +5,8 @@ require 'yaml'
 require 'Curb'
 require 'date'
 require 'json'
+require 'legato'
+require 'oauth2'
 
 require_relative 'Framework/ColorLogger'
 require_relative 'Framework/Job'
